@@ -10,12 +10,15 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.0",
     "express": "^4.21.2",
-    "mongoose": "^8.6.3"
+    "mongoose": "^8.6.3",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.5",
     "@types/express": "^5.0.1",
     "@types/node": "^22.10.1",

@@ -15,7 +15,7 @@ export const loginSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 
-export const formatRegisterValidationError = (error: z.ZodError) => {
+const formatValidationError = (error: z.ZodError, includeRoleCheck = false) => {
   const issues = error.issues;
   const firstIssue = issues[0];
   const field = firstIssue?.path[0];
@@ -26,7 +26,7 @@ export const formatRegisterValidationError = (error: z.ZodError) => {
     message = 'Required fields are missing';
   } else if (field === 'email' || issues.some((issue) => /email/i.test(issue.message))) {
     message = 'Email format is invalid';
-  } else if (field === 'role' || issues.some((issue) => /role/i.test(issue.message))) {
+  } else if (includeRoleCheck && (field === 'role' || issues.some((issue) => /role/i.test(issue.message)))) {
     message = 'Role must be USER or ADMIN';
   }
 
@@ -34,4 +34,12 @@ export const formatRegisterValidationError = (error: z.ZodError) => {
     message,
     errors: issues.map((issue) => issue.message),
   };
+};
+
+export const formatRegisterValidationError = (error: z.ZodError) => {
+  return formatValidationError(error, true);
+};
+
+export const formatLoginValidationError = (error: z.ZodError) => {
+  return formatValidationError(error, false);
 };

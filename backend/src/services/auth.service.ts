@@ -1,7 +1,6 @@
-import jwt from 'jsonwebtoken';
-
 import { User } from '../models/user';
 import { comparePassword, hashPassword } from '../utils/hash';
+import { generateAccessToken } from '../utils/jwt';
 import { LoginInput, RegisterInput } from '../validators/auth.validator';
 
 interface UserSummary {
@@ -24,23 +23,34 @@ interface LoginResponse {
   user: UserSummary;
 }
 
-export class AuthService {
-  public async register(data: RegisterInput): Promise<RegistrationResponse> {
-    await this.ensureEmailIsAvailable(data.email);
+interface UserWithSummaryFields {
+  _id: unknown;
+  name: string;
+  email: string;
+  role: string;
+}
 
-    const hashedPassword = await hashPassword(data.password);
+export class AuthService {
+  public async register(registerData: RegisterInput): Promise<RegistrationResponse> {
+    await this.checkEmailAvailability(registerData.email);
+
+    const hashedPassword = await hashPassword(registerData.password);
     const createdUser = await User.create({
-      name: data.name,
-      email: data.email,
+      name: registerData.name,
+      email: registerData.email,
       password: hashedPassword,
-      role: data.role,
+      role: registerData.role,
     });
 
-    return this.buildRegistrationResponse(createdUser);
+    return {
+      success: true,
+      message: 'User registered successfully',
+      user: this.createUserSummary(createdUser),
+    };
   }
 
-  public async login(data: LoginInput): Promise<LoginResponse> {
-    const existingUser = await User.findOne({ email: data.email });
+  public async login(loginData: LoginInput): Promise<LoginResponse> {
+    const existingUser = await User.findOne({ email: loginData.email });
 
     if (!existingUser) {
       const error = new Error('Email not registered');
@@ -48,7 +58,7 @@ export class AuthService {
       throw error;
     }
 
-    const isPasswordValid = await comparePassword(data.password, existingUser.password);
+    const isPasswordValid = await comparePassword(loginData.password, existingUser.password);
 
     if (!isPasswordValid) {
       const error = new Error('Invalid credentials');
@@ -56,22 +66,21 @@ export class AuthService {
       throw error;
     }
 
-    const token = this.generateToken(existingUser);
+    const token = generateAccessToken({
+      id: existingUser._id,
+      email: existingUser.email,
+      role: existingUser.role,
+    });
 
     return {
       success: true,
       message: 'Login successful',
       token,
-      user: {
-        _id: existingUser._id,
-        name: existingUser.name,
-        email: existingUser.email,
-        role: existingUser.role,
-      },
+      user: this.createUserSummary(existingUser),
     };
   }
 
-  private async ensureEmailIsAvailable(email: string): Promise<void> {
+  private async checkEmailAvailability(email: string): Promise<void> {
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
@@ -81,30 +90,12 @@ export class AuthService {
     }
   }
 
-  private buildRegistrationResponse(createdUser: { _id: unknown; name: string; email: string; role: string }): RegistrationResponse {
+  private createUserSummary(user: UserWithSummaryFields): UserSummary {
     return {
-      success: true,
-      message: 'User registered successfully',
-      user: {
-        _id: createdUser._id,
-        name: createdUser.name,
-        email: createdUser.email,
-        role: createdUser.role,
-      },
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
     };
-  }
-
-  private generateToken(user: { _id: unknown; email: string; role: string }): string {
-    const secret = process.env.JWT_SECRET || 'default-secret';
-
-    return jwt.sign(
-      {
-        id: user._id,
-        email: user.email,
-        role: user.role,
-      },
-      secret,
-      { expiresIn: '1h' }
-    );
   }
 }

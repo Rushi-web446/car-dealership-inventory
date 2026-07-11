@@ -7,7 +7,13 @@ export const registerSchema = z.object({
   role: z.enum(['USER', 'ADMIN']),
 });
 
+export const loginSchema = z.object({
+  email: z.string().trim().email('Email format is invalid'),
+  password: z.string().min(1, 'Password is required'),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
 
 export const formatRegisterValidationError = (error: z.ZodError) => {
   const issues = error.issues;

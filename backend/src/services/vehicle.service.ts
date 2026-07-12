@@ -39,6 +39,11 @@ export class VehicleService {
     return convertedVehicle;
   }
 
+  public async deleteVehicle(id: string): Promise<boolean> {
+    const deletedVehicle = await Vehicle.findByIdAndDelete(id);
+    return deletedVehicle !== null;
+  }
+
   private buildSearchQuery(filters: SearchVehiclesInput): Record<string, unknown> {
     const query: Record<string, unknown> = { quantity: { $gt: 0 } };
 

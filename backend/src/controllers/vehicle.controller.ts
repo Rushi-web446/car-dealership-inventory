@@ -82,3 +82,23 @@ export const updateVehicle = asyncHandler(
     }
   }
 );
+
+export const deleteVehicle = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = req.params.id as string;
+      const deleted = await vehicleService.deleteVehicle(id);
+
+      if (!deleted) {
+        return res.status(404).json({ success: false, message: 'Vehicle not found' });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Vehicle deleted successfully'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);

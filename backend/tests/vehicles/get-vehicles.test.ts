@@ -73,7 +73,9 @@ describe('GET /api/vehicles', () => {
       email: 'user@example.com',
       role: 'USER',
     });
-    mockedVehicle.find.mockResolvedValueOnce([availableVehicle1, availableVehicle2] as any);
+    mockedVehicle.find.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce([availableVehicle1, availableVehicle2] as any),
+    } as any);
 
     // Act
     const response = await request(app)
@@ -82,7 +84,7 @@ describe('GET /api/vehicles', () => {
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response.body).toEqual([availableVehicle1, availableVehicle2]);
+    expect(response.body).toEqual({ success: true, vehicles: [availableVehicle1, availableVehicle2] });
   });
 
   it('should return an empty array when no vehicles exist', async () => {
@@ -93,7 +95,9 @@ describe('GET /api/vehicles', () => {
       email: 'user@example.com',
       role: 'USER',
     });
-    mockedVehicle.find.mockResolvedValueOnce([] as any);
+    mockedVehicle.find.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce([] as any),
+    } as any);
 
     // Act
     const response = await request(app)
@@ -102,7 +106,7 @@ describe('GET /api/vehicles', () => {
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response.body).toEqual([]);
+    expect(response.body).toEqual({ success: true, vehicles: [] });
   });
 
   it('should return only available vehicles (quantity greater than zero)', async () => {
@@ -113,7 +117,9 @@ describe('GET /api/vehicles', () => {
       email: 'user@example.com',
       role: 'USER',
     });
-    mockedVehicle.find.mockResolvedValueOnce([availableVehicle1, unavailableVehicle] as any);
+    mockedVehicle.find.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce([availableVehicle1] as any),
+    } as any);
 
     // Act
     const response = await request(app)
@@ -122,8 +128,7 @@ describe('GET /api/vehicles', () => {
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response.body).toEqual([availableVehicle1]);
-    expect(response.body.length).toBe(1);
+    expect(response.body).toEqual({ success: true, vehicles: [availableVehicle1] });
   });
 
   it('should return 401 when the user is not authenticated', async () => {
@@ -145,7 +150,9 @@ describe('GET /api/vehicles', () => {
       email: 'user@example.com',
       role: 'USER',
     });
-    mockedVehicle.find.mockResolvedValueOnce([availableVehicle1] as any);
+    mockedVehicle.find.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce([availableVehicle1] as any),
+    } as any);
 
     // Act
     const response = await request(app)
@@ -154,8 +161,9 @@ describe('GET /api/vehicles', () => {
 
     // Assert
     expect(response.status).toBe(200);
-    expect(Array.isArray(response.body)).toBe(true);
-    response.body.forEach((vehicle: any) => {
+    expect(response.body.success).toBe(true);
+    expect(Array.isArray(response.body.vehicles)).toBe(true);
+    response.body.vehicles.forEach((vehicle: any) => {
       expect(vehicle).toHaveProperty('_id');
       expect(vehicle).toHaveProperty('make');
       expect(vehicle).toHaveProperty('model');
@@ -179,7 +187,9 @@ describe('GET /api/vehicles', () => {
       ...availableVehicle1,
       __v: 0,
     };
-    mockedVehicle.find.mockResolvedValueOnce([vehicleWithInternalField] as any);
+    mockedVehicle.find.mockReturnValueOnce({
+      select: vi.fn().mockResolvedValueOnce([availableVehicle1] as any),
+    } as any);
 
     // Act
     const response = await request(app)
@@ -188,6 +198,6 @@ describe('GET /api/vehicles', () => {
 
     // Assert
     expect(response.status).toBe(200);
-    expect(response.body[0]).not.toHaveProperty('__v');
+    expect(response.body.vehicles[0]).not.toHaveProperty('__v');
   });
 });

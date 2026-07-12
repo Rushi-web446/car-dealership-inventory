@@ -7,25 +7,8 @@ export class VehicleService {
     return newVehicle;
   }
 
-  public async getAvailableVehicles(): Promise<Partial<IVehicle>[]> {
-    let vehicles: any[] = [];
-
-    try {
-      const query = Vehicle.find({ quantity: { $gt: 0 } });
-      // Only call .select() if the method exists
-      vehicles = await (typeof query.select === 'function' ? query.select('-__v') : query);
-    } catch (e) {
-      // If that fails (test mocks), just get all
-      vehicles = await Vehicle.find();
-    }
-
-    // Always filter for quantity>0 and remove __v
-    return vehicles
-      .filter(vehicle => vehicle.quantity > 0)
-      .map(vehicle => {
-        const obj = vehicle.toObject ? vehicle.toObject() : vehicle;
-        const { __v, ...clean } = obj;
-        return clean;
-      });
+  public async getAvailableVehicles(): Promise<(IVehicle & { _id: string })[]> {
+    const vehicles = await Vehicle.find({ quantity: { $gt: 0 } }).select('-__v');
+    return vehicles as (IVehicle & { _id: string })[];
   }
 }

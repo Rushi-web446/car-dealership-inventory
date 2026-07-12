@@ -30,7 +30,7 @@ export const getVehicles = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const availableVehicles = await vehicleService.getAvailableVehicles();
-      return res.status(200).json(availableVehicles);
+      return res.status(200).json({ success: true, vehicles: availableVehicles });
     } catch (error) {
       next(error);
     }

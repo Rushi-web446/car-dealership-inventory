@@ -10,6 +10,12 @@ export const createVehicleSchema = z.object({
 
 export type CreateVehicleInput = z.infer<typeof createVehicleSchema>;
 
+export const restockVehicleSchema = z.object({
+  quantity: z.number().int().gt(0, 'Quantity must be greater than zero'),
+});
+
+export type RestockVehicleInput = z.infer<typeof restockVehicleSchema>;
+
 export const searchVehiclesSchema = z.object({
   make: z.string().optional(),
   model: z.string().optional(),

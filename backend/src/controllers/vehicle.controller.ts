@@ -4,6 +4,7 @@ import { InventoryService } from '../services/inventory.service';
 import { VehicleService } from '../services/vehicle.service';
 import {
   createVehicleSchema,
+  restockVehicleSchema,
   searchVehiclesSchema,
   formatVehicleValidationError,
 } from '../validators/vehicle.validator';
@@ -124,6 +125,37 @@ export const purchaseVehicle = asyncHandler(
         message: 'Vehicle purchased successfully',
         vehicle: result.vehicle,
         ...result.vehicle,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+export const restockVehicle = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const validationResult = restockVehicleSchema.safeParse(req.body);
+
+    if (!validationResult.success) {
+      const { message, errors } = formatVehicleValidationError(validationResult.error);
+      return res.status(400).json({ success: false, message, errors });
+    }
+
+    try {
+      const id = req.params.id as string;
+      const result = await inventoryService.restockVehicleById(
+        id,
+        validationResult.data.quantity
+      );
+
+      if (result.status === 'not_found') {
+        return res.status(404).json({ success: false, message: 'Vehicle not found' });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Vehicle restocked successfully',
+        vehicle: result.vehicle,
       });
     } catch (error) {
       next(error);

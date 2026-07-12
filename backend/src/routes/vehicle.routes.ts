@@ -4,6 +4,7 @@ import {
   deleteVehicle,
   getVehicles,
   purchaseVehicle,
+  restockVehicle,
   searchVehicles,
   updateVehicle,
 } from '../controllers/vehicle.controller';
@@ -15,6 +16,7 @@ router.post('/', authenticateJwt, requireAdmin, createVehicle);
 router.get('/', authenticateJwt, getVehicles);
 router.get('/search', authenticateJwt, searchVehicles);
 router.post('/:id/purchase', authenticateJwt, purchaseVehicle);
+router.post('/:id/restock', authenticateJwt, requireAdmin, restockVehicle);
 router.put('/:id', authenticateJwt, requireAdmin, updateVehicle);
 router.delete('/:id', authenticateJwt, requireAdmin, deleteVehicle);
 

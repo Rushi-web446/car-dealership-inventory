@@ -1,30 +1,22 @@
-import mongoose from 'mongoose';
-import { Vehicle, IVehicle } from '../models/vehicle';
+import { Vehicle } from '../models/vehicle';
+import { toPlainVehicle, VehicleWithStringId } from '../utils/vehicle.mapper';
 import { CreateVehicleInput, SearchVehiclesInput } from '../validators/vehicle.validator';
-
-const { ObjectId } = mongoose.Types;
-
-type VehicleWithStringId = IVehicle & { _id: string };
-type PurchaseVehicleResult =
-  | { status: 'success'; vehicle: VehicleWithStringId }
-  | { status: 'not_found' }
-  | { status: 'out_of_stock' };
 
 export class VehicleService {
   public async createVehicle(vehicleData: CreateVehicleInput): Promise<VehicleWithStringId> {
     const newVehicle = await Vehicle.create(vehicleData);
-    return this.convertToPlainObject(newVehicle);
+    return toPlainVehicle(newVehicle);
   }
 
   public async getAvailableVehicles(): Promise<VehicleWithStringId[]> {
     const vehicles = await Vehicle.find({ quantity: { $gt: 0 } }).select('-__v');
-    return vehicles.map(this.convertToPlainObject);
+    return vehicles.map(toPlainVehicle);
   }
 
   public async searchVehicles(filters: SearchVehiclesInput): Promise<VehicleWithStringId[]> {
     const query = this.buildSearchQuery(filters);
     const vehicles = await Vehicle.find(query).select('-__v');
-    return vehicles.map(this.convertToPlainObject);
+    return vehicles.map(toPlainVehicle);
   }
 
   public async updateVehicle(id: string, vehicleData: CreateVehicleInput): Promise<VehicleWithStringId | null> {
@@ -38,39 +30,12 @@ export class VehicleService {
       return null;
     }
 
-    return this.convertToPlainObject(updatedVehicle);
+    return toPlainVehicle(updatedVehicle);
   }
 
   public async deleteVehicle(id: string): Promise<boolean> {
     const deletedVehicle = await Vehicle.findByIdAndDelete(id);
     return deletedVehicle !== null;
-  }
-
-  public async purchaseVehicle(id: string): Promise<PurchaseVehicleResult> {
-    const existingVehicle = await Vehicle.findById(id);
-
-    if (!existingVehicle) {
-      return { status: 'not_found' };
-    }
-
-    if (existingVehicle.quantity <= 0) {
-      return { status: 'out_of_stock' };
-    }
-
-    const updatedVehicle = await Vehicle.findByIdAndUpdate(
-      id,
-      { $inc: { quantity: -1 } },
-      { new: true }
-    );
-
-    if (!updatedVehicle) {
-      return { status: 'not_found' };
-    }
-
-    return {
-      status: 'success',
-      vehicle: this.convertToPlainObject(updatedVehicle),
-    };
   }
 
   private buildSearchQuery(filters: SearchVehiclesInput): Record<string, unknown> {
@@ -100,21 +65,5 @@ export class VehicleService {
     }
 
     return query;
-  }
-
-  private convertToPlainObject(vehicle: any): VehicleWithStringId {
-    const obj = (vehicle.toObject ? vehicle.toObject() : vehicle) as any;
-    const plainObj: any = {};
-    
-    for (const key in obj) {
-      if (typeof obj[key] !== 'function' && key !== '__v') {
-        plainObj[key] = obj[key];
-      }
-    }
-
-    return {
-      ...plainObj,
-      _id: plainObj._id instanceof ObjectId ? plainObj._id.toString() : plainObj._id
-    };
   }
 }

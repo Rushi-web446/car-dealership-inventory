@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
+import { InventoryService } from '../services/inventory.service';
 import { VehicleService } from '../services/vehicle.service';
 import {
   createVehicleSchema,
@@ -7,6 +8,7 @@ import {
   formatVehicleValidationError,
 } from '../validators/vehicle.validator';
 
+const inventoryService = new InventoryService();
 const vehicleService = new VehicleService();
 
 export const createVehicle = asyncHandler(
@@ -107,7 +109,7 @@ export const purchaseVehicle = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.params.id as string;
-      const result = await vehicleService.purchaseVehicle(id);
+      const result = await inventoryService.purchaseVehicleById(id);
 
       if (result.status === 'not_found') {
         return res.status(404).json({ success: false, message: 'Vehicle not found' });

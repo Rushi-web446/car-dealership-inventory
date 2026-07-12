@@ -1,5 +1,12 @@
 import { Router } from 'express';
-import { createVehicle, getVehicles, searchVehicles, updateVehicle, deleteVehicle, purchaseVehicle } from '../controllers/vehicle.controller';
+import {
+  createVehicle,
+  deleteVehicle,
+  getVehicles,
+  purchaseVehicle,
+  searchVehicles,
+  updateVehicle,
+} from '../controllers/vehicle.controller';
 import { authenticateJwt, requireAdmin } from '../middleware/auth.middleware';
 
 const router = Router();

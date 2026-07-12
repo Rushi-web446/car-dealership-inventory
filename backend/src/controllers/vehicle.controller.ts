@@ -102,3 +102,29 @@ export const deleteVehicle = asyncHandler(
     }
   }
 );
+
+export const purchaseVehicle = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = req.params.id as string;
+      const result = await vehicleService.purchaseVehicle(id);
+
+      if (result.status === 'not_found') {
+        return res.status(404).json({ success: false, message: 'Vehicle not found' });
+      }
+
+      if (result.status === 'out_of_stock') {
+        return res.status(400).json({ success: false, message: 'Vehicle is out of stock' });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Vehicle purchased successfully',
+        vehicle: result.vehicle,
+        ...result.vehicle,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);

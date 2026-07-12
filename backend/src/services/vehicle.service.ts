@@ -5,6 +5,10 @@ import { CreateVehicleInput, SearchVehiclesInput } from '../validators/vehicle.v
 const { ObjectId } = mongoose.Types;
 
 type VehicleWithStringId = IVehicle & { _id: string };
+type PurchaseVehicleResult =
+  | { status: 'success'; vehicle: VehicleWithStringId }
+  | { status: 'not_found' }
+  | { status: 'out_of_stock' };
 
 export class VehicleService {
   public async createVehicle(vehicleData: CreateVehicleInput): Promise<VehicleWithStringId> {
@@ -40,6 +44,33 @@ export class VehicleService {
   public async deleteVehicle(id: string): Promise<boolean> {
     const deletedVehicle = await Vehicle.findByIdAndDelete(id);
     return deletedVehicle !== null;
+  }
+
+  public async purchaseVehicle(id: string): Promise<PurchaseVehicleResult> {
+    const existingVehicle = await Vehicle.findById(id);
+
+    if (!existingVehicle) {
+      return { status: 'not_found' };
+    }
+
+    if (existingVehicle.quantity <= 0) {
+      return { status: 'out_of_stock' };
+    }
+
+    const updatedVehicle = await Vehicle.findByIdAndUpdate(
+      id,
+      { $inc: { quantity: -1 } },
+      { new: true }
+    );
+
+    if (!updatedVehicle) {
+      return { status: 'not_found' };
+    }
+
+    return {
+      status: 'success',
+      vehicle: this.convertToPlainObject(updatedVehicle),
+    };
   }
 
   private buildSearchQuery(filters: SearchVehiclesInput): Record<string, unknown> {

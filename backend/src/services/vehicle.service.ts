@@ -24,7 +24,7 @@ export class VehicleService {
   }
 
   public async updateVehicle(id: string, vehicleData: CreateVehicleInput): Promise<VehicleWithStringId | null> {
-    let updatedVehicle = await Vehicle.findByIdAndUpdate(
+    const updatedVehicle = await Vehicle.findByIdAndUpdate(
       id,
       vehicleData,
       { new: true }
@@ -34,9 +34,7 @@ export class VehicleService {
       return null;
     }
 
-    // Manually exclude __v since findByIdAndUpdate doesn't support .select() as nicely as find()
-    const convertedVehicle = this.convertToPlainObject(updatedVehicle);
-    return convertedVehicle;
+    return this.convertToPlainObject(updatedVehicle);
   }
 
   public async deleteVehicle(id: string): Promise<boolean> {
@@ -78,7 +76,7 @@ export class VehicleService {
     const plainObj: any = {};
     
     for (const key in obj) {
-      if (typeof obj[key] !== 'function') {
+      if (typeof obj[key] !== 'function' && key !== '__v') {
         plainObj[key] = obj[key];
       }
     }

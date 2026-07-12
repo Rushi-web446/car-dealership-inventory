@@ -1,7 +1,10 @@
+import mongoose from 'mongoose';
 import { Vehicle, IVehicle } from '../models/vehicle';
 import { CreateVehicleInput, SearchVehiclesInput } from '../validators/vehicle.validator';
-import mongoose from 'mongoose';
+
 const { ObjectId } = mongoose.Types;
+
+type VehicleWithStringId = IVehicle & { _id: string };
 
 export class VehicleService {
   public async createVehicle(vehicleData: CreateVehicleInput): Promise<IVehicle> {
@@ -9,26 +12,19 @@ export class VehicleService {
     return newVehicle;
   }
 
-  public async getAvailableVehicles(): Promise<(IVehicle & { _id: string })[]> {
+  public async getAvailableVehicles(): Promise<VehicleWithStringId[]> {
     const vehicles = await Vehicle.find({ quantity: { $gt: 0 } }).select('-__v');
-    return vehicles.map(vehicle => {
-      const obj = (vehicle.toObject ? vehicle.toObject() : vehicle) as any;
-      // Filter out any function properties (like toObject)
-      const plainObj: any = {};
-      for (const key in obj) {
-        if (typeof obj[key] !== 'function') {
-          plainObj[key] = obj[key];
-        }
-      }
-      return {
-        ...plainObj,
-        _id: plainObj._id instanceof ObjectId ? plainObj._id.toString() : plainObj._id
-      };
-    }) as (IVehicle & { _id: string })[];
+    return vehicles.map(this.convertToPlainObject);
   }
 
-  public async searchVehicles(filters: SearchVehiclesInput): Promise<(IVehicle & { _id: string })[]> {
-    const query: any = { quantity: { $gt: 0 } };
+  public async searchVehicles(filters: SearchVehiclesInput): Promise<VehicleWithStringId[]> {
+    const query = this.buildSearchQuery(filters);
+    const vehicles = await Vehicle.find(query).select('-__v');
+    return vehicles.map(this.convertToPlainObject);
+  }
+
+  private buildSearchQuery(filters: SearchVehiclesInput): Record<string, unknown> {
+    const query: Record<string, unknown> = { quantity: { $gt: 0 } };
 
     if (filters.make) {
       query.make = { $regex: filters.make, $options: 'i' };
@@ -43,29 +39,32 @@ export class VehicleService {
     }
 
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
-      query.price = {};
+      const priceFilter: Record<string, unknown> = {};
       if (filters.minPrice !== undefined) {
-        query.price.$gte = filters.minPrice;
+        priceFilter.$gte = filters.minPrice;
       }
       if (filters.maxPrice !== undefined) {
-        query.price.$lte = filters.maxPrice;
+        priceFilter.$lte = filters.maxPrice;
+      }
+      query.price = priceFilter;
+    }
+
+    return query;
+  }
+
+  private convertToPlainObject(vehicle: any): VehicleWithStringId {
+    const obj = (vehicle.toObject ? vehicle.toObject() : vehicle) as any;
+    const plainObj: any = {};
+    
+    for (const key in obj) {
+      if (typeof obj[key] !== 'function') {
+        plainObj[key] = obj[key];
       }
     }
 
-    const vehicles = await Vehicle.find(query).select('-__v');
-    return vehicles.map(vehicle => {
-      const obj = (vehicle.toObject ? vehicle.toObject() : vehicle) as any;
-      // Filter out any function properties (like toObject)
-      const plainObj: any = {};
-      for (const key in obj) {
-        if (typeof obj[key] !== 'function') {
-          plainObj[key] = obj[key];
-        }
-      }
-      return {
-        ...plainObj,
-        _id: plainObj._id instanceof ObjectId ? plainObj._id.toString() : plainObj._id
-      };
-    }) as (IVehicle & { _id: string })[];
+    return {
+      ...plainObj,
+      _id: plainObj._id instanceof ObjectId ? plainObj._id.toString() : plainObj._id
+    };
   }
 }

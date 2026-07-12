@@ -9,7 +9,7 @@ export class VehicleService {
   }
 
   public async getAvailableVehicles(): Promise<VehicleWithStringId[]> {
-    const vehicles = await Vehicle.find({ quantity: { $gt: 0 } }).select('-__v');
+    const vehicles = await Vehicle.find({}).select('-__v');
     return vehicles.map(toPlainVehicle);
   }
 
@@ -39,7 +39,7 @@ export class VehicleService {
   }
 
   private buildSearchQuery(filters: SearchVehiclesInput): Record<string, unknown> {
-    const query: Record<string, unknown> = { quantity: { $gt: 0 } };
+    const query: Record<string, unknown> = {};
 
     if (filters.make) {
       query.make = { $regex: filters.make, $options: 'i' };

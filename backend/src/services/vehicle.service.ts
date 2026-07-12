@@ -7,9 +7,9 @@ const { ObjectId } = mongoose.Types;
 type VehicleWithStringId = IVehicle & { _id: string };
 
 export class VehicleService {
-  public async createVehicle(vehicleData: CreateVehicleInput): Promise<IVehicle> {
+  public async createVehicle(vehicleData: CreateVehicleInput): Promise<VehicleWithStringId> {
     const newVehicle = await Vehicle.create(vehicleData);
-    return newVehicle;
+    return this.convertToPlainObject(newVehicle);
   }
 
   public async getAvailableVehicles(): Promise<VehicleWithStringId[]> {
@@ -24,7 +24,7 @@ export class VehicleService {
   }
 
   public async updateVehicle(id: string, vehicleData: CreateVehicleInput): Promise<VehicleWithStringId | null> {
-    const updatedVehicle = await Vehicle.findByIdAndUpdate(
+    let updatedVehicle = await Vehicle.findByIdAndUpdate(
       id,
       vehicleData,
       { new: true }
@@ -34,7 +34,9 @@ export class VehicleService {
       return null;
     }
 
-    return this.convertToPlainObject(updatedVehicle);
+    // Manually exclude __v since findByIdAndUpdate doesn't support .select() as nicely as find()
+    const convertedVehicle = this.convertToPlainObject(updatedVehicle);
+    return convertedVehicle;
   }
 
   private buildSearchQuery(filters: SearchVehiclesInput): Record<string, unknown> {

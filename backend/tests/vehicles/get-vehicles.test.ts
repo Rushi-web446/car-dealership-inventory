@@ -32,6 +32,7 @@ describe('GET /api/vehicles', () => {
     vi.clearAllMocks();
   });
 
+  const mockDate = new Date().toISOString();
   const availableVehicle1 = {
     _id: 'vehicle-1',
     make: 'Toyota',
@@ -39,9 +40,8 @@ describe('GET /api/vehicles', () => {
     category: 'Sedan',
     price: 25000,
     quantity: 10,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    __v: 0,
+    createdAt: mockDate,
+    updatedAt: mockDate,
   };
   const availableVehicle2 = {
     _id: 'vehicle-2',
@@ -50,9 +50,8 @@ describe('GET /api/vehicles', () => {
     category: 'Sedan',
     price: 22000,
     quantity: 5,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    __v: 0,
+    createdAt: mockDate,
+    updatedAt: mockDate,
   };
   const unavailableVehicle = {
     _id: 'vehicle-3',
@@ -61,8 +60,8 @@ describe('GET /api/vehicles', () => {
     category: 'Truck',
     price: 35000,
     quantity: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: mockDate,
+    updatedAt: mockDate,
     __v: 0,
   };
 
@@ -124,7 +123,7 @@ describe('GET /api/vehicles', () => {
     // Assert
     expect(response.status).toBe(200);
     expect(response.body).toEqual([availableVehicle1]);
-    expect(response.body).not.toContain(unavailableVehicle);
+    expect(response.body.length).toBe(1);
   });
 
   it('should return 401 when the user is not authenticated', async () => {

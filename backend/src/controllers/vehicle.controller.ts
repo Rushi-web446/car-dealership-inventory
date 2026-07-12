@@ -55,3 +55,30 @@ export const searchVehicles = asyncHandler(
     }
   }
 );
+
+export const updateVehicle = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const validationResult = createVehicleSchema.safeParse(req.body);
+
+    if (!validationResult.success) {
+      const { message, errors } = formatVehicleValidationError(validationResult.error);
+      return res.status(400).json({ success: false, message, errors });
+    }
+
+    try {
+      const id = req.params.id as string;
+      const updatedVehicle = await vehicleService.updateVehicle(
+        id,
+        validationResult.data
+      );
+
+      if (!updatedVehicle) {
+        return res.status(404).json({ success: false, message: 'Vehicle not found' });
+      }
+
+      return res.status(200).json(updatedVehicle);
+    } catch (error) {
+      next(error);
+    }
+  }
+);

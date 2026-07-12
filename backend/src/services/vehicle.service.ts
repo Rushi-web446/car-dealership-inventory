@@ -23,6 +23,20 @@ export class VehicleService {
     return vehicles.map(this.convertToPlainObject);
   }
 
+  public async updateVehicle(id: string, vehicleData: CreateVehicleInput): Promise<VehicleWithStringId | null> {
+    const updatedVehicle = await Vehicle.findByIdAndUpdate(
+      id,
+      vehicleData,
+      { new: true }
+    );
+
+    if (!updatedVehicle) {
+      return null;
+    }
+
+    return this.convertToPlainObject(updatedVehicle);
+  }
+
   private buildSearchQuery(filters: SearchVehiclesInput): Record<string, unknown> {
     const query: Record<string, unknown> = { quantity: { $gt: 0 } };
 

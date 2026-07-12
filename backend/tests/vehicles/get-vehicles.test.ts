@@ -27,13 +27,24 @@ const createMockToken = (role: 'USER' | 'ADMIN') => {
   return 'mock-token';
 };
 
+const createMockVehicle = (vehicle: any) => {
+  const mockVehicle = { ...vehicle };
+  Object.defineProperty(mockVehicle, 'toObject', {
+    value: () => vehicle,
+    enumerable: false,
+    writable: true,
+    configurable: true
+  });
+  return mockVehicle;
+};
+
 describe('GET /api/vehicles', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   const mockDate = new Date().toISOString();
-  const availableVehicle1 = {
+  const availableVehicle1 = createMockVehicle({
     _id: 'vehicle-1',
     make: 'Toyota',
     model: 'Camry',
@@ -42,8 +53,8 @@ describe('GET /api/vehicles', () => {
     quantity: 10,
     createdAt: mockDate,
     updatedAt: mockDate,
-  };
-  const availableVehicle2 = {
+  });
+  const availableVehicle2 = createMockVehicle({
     _id: 'vehicle-2',
     make: 'Honda',
     model: 'Civic',
@@ -52,8 +63,8 @@ describe('GET /api/vehicles', () => {
     quantity: 5,
     createdAt: mockDate,
     updatedAt: mockDate,
-  };
-  const unavailableVehicle = {
+  });
+  const unavailableVehicle = createMockVehicle({
     _id: 'vehicle-3',
     make: 'Ford',
     model: 'F-150',
@@ -63,7 +74,7 @@ describe('GET /api/vehicles', () => {
     createdAt: mockDate,
     updatedAt: mockDate,
     __v: 0,
-  };
+  });
 
   it('should return all available vehicles', async () => {
     // Arrange

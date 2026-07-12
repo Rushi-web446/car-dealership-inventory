@@ -3,6 +3,7 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { VehicleService } from '../services/vehicle.service';
 import {
   createVehicleSchema,
+  searchVehiclesSchema,
   formatVehicleValidationError,
 } from '../validators/vehicle.validator';
 
@@ -31,6 +32,24 @@ export const getVehicles = asyncHandler(
     try {
       const availableVehicles = await vehicleService.getAvailableVehicles();
       return res.status(200).json({ success: true, vehicles: availableVehicles });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+export const searchVehicles = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const validationResult = searchVehiclesSchema.safeParse(req.query);
+
+    if (!validationResult.success) {
+      const { message, errors } = formatVehicleValidationError(validationResult.error);
+      return res.status(400).json({ success: false, message, errors });
+    }
+
+    try {
+      const vehicles = await vehicleService.searchVehicles(validationResult.data);
+      return res.status(200).json({ success: true, vehicles });
     } catch (error) {
       next(error);
     }

@@ -27,13 +27,24 @@ const createMockToken = (role: 'USER' | 'ADMIN') => {
   return 'mock-token';
 };
 
+const createMockVehicle = (vehicle: any) => {
+  const mockVehicle = { ...vehicle };
+  Object.defineProperty(mockVehicle, 'toObject', {
+    value: () => vehicle,
+    enumerable: false,
+    writable: true,
+    configurable: true
+  });
+  return mockVehicle;
+};
+
 describe('GET /api/vehicles/search', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   const mockDate = new Date().toISOString();
-  const toyotaCamry = {
+  const toyotaCamry = createMockVehicle({
     _id: 'vehicle-1',
     make: 'Toyota',
     model: 'Camry',
@@ -42,8 +53,8 @@ describe('GET /api/vehicles/search', () => {
     quantity: 10,
     createdAt: mockDate,
     updatedAt: mockDate,
-  };
-  const hondaCivic = {
+  });
+  const hondaCivic = createMockVehicle({
     _id: 'vehicle-2',
     make: 'Honda',
     model: 'Civic',
@@ -52,8 +63,8 @@ describe('GET /api/vehicles/search', () => {
     quantity: 5,
     createdAt: mockDate,
     updatedAt: mockDate,
-  };
-  const fordF150 = {
+  });
+  const fordF150 = createMockVehicle({
     _id: 'vehicle-3',
     make: 'Ford',
     model: 'F-150',
@@ -62,7 +73,7 @@ describe('GET /api/vehicles/search', () => {
     quantity: 3,
     createdAt: mockDate,
     updatedAt: mockDate,
-  };
+  });
 
   it('should return vehicles matching the make', async () => {
     // Arrange

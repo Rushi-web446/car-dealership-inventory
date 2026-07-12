@@ -10,6 +10,26 @@ export const createVehicleSchema = z.object({
 
 export type CreateVehicleInput = z.infer<typeof createVehicleSchema>;
 
+export const searchVehiclesSchema = z.object({
+  make: z.string().optional(),
+  model: z.string().optional(),
+  category: z.string().optional(),
+  minPrice: z.coerce.number().min(0, 'minPrice must be non-negative').optional(),
+  maxPrice: z.coerce.number().min(0, 'maxPrice must be non-negative').optional(),
+}).refine(
+  (data) => {
+    if (data.minPrice !== undefined && data.maxPrice !== undefined) {
+      return data.minPrice <= data.maxPrice;
+    }
+    return true;
+  },
+  {
+    message: 'minPrice must be less than or equal to maxPrice',
+  }
+);
+
+export type SearchVehiclesInput = z.infer<typeof searchVehiclesSchema>;
+
 export const formatVehicleValidationError = (error: z.ZodError) => {
   return {
     message: 'Validation failed',
